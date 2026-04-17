@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
+import { setupApp } from '../src/setup-app';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
@@ -13,13 +14,18 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    setupApp(app as never);
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/api/v1/health (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/api/v1/health')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res) => {
+        expect(res.body.success).toBe(true);
+        expect(res.body.data.status).toBe('ok');
+        expect(res.body.data.service).toBe('home-service-backend');
+      });
   });
 });
