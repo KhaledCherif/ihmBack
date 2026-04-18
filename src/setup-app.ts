@@ -1,11 +1,15 @@
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 export function setupApp(app: NestExpressApplication): void {
   app.setGlobalPrefix('api/v1');
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads',
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

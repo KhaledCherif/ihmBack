@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CategoriesModule } from './categories/categories.module';
 import {
   Category,
   ConflictCase,
@@ -16,6 +17,8 @@ import {
   SubCategory,
   User,
 } from './database/entities';
+import { ServicesModule } from './services/services.module';
+import { SubCategoriesModule } from './sub-categories/sub-categories.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -41,6 +44,9 @@ import { UsersModule } from './users/users.module';
     }),
     AuthModule,
     UsersModule,
+    CategoriesModule,
+    SubCategoriesModule,
+    ServicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
