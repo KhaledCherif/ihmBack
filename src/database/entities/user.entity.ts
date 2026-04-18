@@ -81,6 +81,9 @@ export class User extends BaseEntity {
   @Column({ default: 0 })
   lostConflictsCount!: number;
 
+  @Column({ default: true })
+  emailNotificationsEnabled!: boolean;
+
   @OneToMany(() => Service, (service) => service.provider)
   providedServices!: Service[];
 

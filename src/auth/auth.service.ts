@@ -88,6 +88,7 @@ export class AuthService {
         : null,
       hiddenReviewsCount: 0,
       lostConflictsCount: 0,
+      emailNotificationsEnabled: true,
     });
 
     const savedUser = await this.usersRepository.save(user);
@@ -394,6 +395,7 @@ export class AuthService {
       isSuspended: user.isSuspended,
       providerValidationStatus: user.providerValidationStatus,
       emailVerifiedAt: user.emailVerifiedAt,
+      emailNotificationsEnabled: user.emailNotificationsEnabled,
     };
   }
 
