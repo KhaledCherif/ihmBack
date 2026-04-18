@@ -9,7 +9,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../common/guards/admin.guard';
 import { CreateSubCategoryDto } from './dto/create-sub-category.dto';
@@ -31,6 +37,8 @@ export class SubCategoriesController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Admin list including soft-deleted sub-categories' })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
+  @ApiForbiddenResponse({ description: 'Admin role required' })
   findAllAdmin() {
     return this.subCategoriesService.findAllAdmin();
   }
@@ -39,6 +47,8 @@ export class SubCategoriesController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create sub-category (admin only)' })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
+  @ApiForbiddenResponse({ description: 'Admin role required' })
   create(@Body() dto: CreateSubCategoryDto) {
     return this.subCategoriesService.create(dto);
   }
@@ -47,6 +57,8 @@ export class SubCategoriesController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update sub-category (admin only)' })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
+  @ApiForbiddenResponse({ description: 'Admin role required' })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateSubCategoryDto,
@@ -58,7 +70,19 @@ export class SubCategoriesController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Soft delete sub-category (admin only)' })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
+  @ApiForbiddenResponse({ description: 'Admin role required' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.subCategoriesService.remove(id);
+  }
+
+  @Patch('admin/:id/restore')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Restore soft-deleted sub-category (admin only)' })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
+  @ApiForbiddenResponse({ description: 'Admin role required' })
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.subCategoriesService.restore(id);
   }
 }

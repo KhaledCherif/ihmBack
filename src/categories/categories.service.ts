@@ -119,4 +119,25 @@ export class CategoriesService {
 
     return { message: 'Category soft deleted' };
   }
+
+  async restore(id: number) {
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+      withDeleted: true,
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    if (!category.deletedAt) {
+      return { message: 'Category is already active' };
+    }
+
+    await this.categoryRepository.restore(id);
+
+    await this.categoryRepository.update(id, { isActive: true });
+
+    return { message: 'Category restored successfully' };
+  }
 }

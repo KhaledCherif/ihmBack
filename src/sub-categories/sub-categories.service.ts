@@ -135,4 +135,31 @@ export class SubCategoriesService {
 
     return { message: 'Sub-category soft deleted' };
   }
+
+  async restore(id: number) {
+    const subCategory = await this.subCategoryRepository.findOne({
+      where: { id },
+      withDeleted: true,
+      relations: { category: true },
+    });
+
+    if (!subCategory) {
+      throw new NotFoundException('Sub-category not found');
+    }
+
+    if (!subCategory.category || subCategory.category.deletedAt) {
+      throw new BadRequestException(
+        'Restore parent category before restoring this sub-category',
+      );
+    }
+
+    if (!subCategory.deletedAt) {
+      return { message: 'Sub-category is already active' };
+    }
+
+    await this.subCategoryRepository.restore(id);
+    await this.subCategoryRepository.update(id, { isActive: true });
+
+    return { message: 'Sub-category restored successfully' };
+  }
 }

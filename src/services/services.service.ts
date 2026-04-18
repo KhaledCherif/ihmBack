@@ -4,6 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { unlink } from 'fs/promises';
+import { basename, join } from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
@@ -270,6 +272,125 @@ export class ServicesService {
     await this.serviceRepository.softDelete(id);
 
     return { message: 'Service soft deleted' };
+  }
+
+  async restore(id: number) {
+    const service = await this.serviceRepository.findOne({
+      where: { id },
+      withDeleted: true,
+      relations: { category: true, subCategory: true, provider: true },
+    });
+
+    if (!service) {
+      throw new NotFoundException('Service not found');
+    }
+
+    if (!service.deletedAt) {
+      return { message: 'Service is already active' };
+    }
+
+    if (service.provider.isSuspended) {
+      throw new BadRequestException('Cannot restore service of suspended provider');
+    }
+
+    if (service.category.deletedAt || service.subCategory.deletedAt) {
+      throw new BadRequestException(
+        'Restore category and sub-category before restoring this service',
+      );
+    }
+
+    await this.serviceRepository.restore(id);
+    await this.serviceRepository.update(id, {
+      isActive: true,
+      isHidden: false,
+    });
+
+    return { message: 'Service restored successfully' };
+  }
+
+  async uploadImages(
+    id: number,
+    currentUser: JwtPayload,
+    files: Express.Multer.File[],
+  ) {
+    await this.assertProviderRole(currentUser);
+
+    const service = await this.serviceRepository.findOne({
+      where: { id },
+      relations: { provider: true },
+    });
+
+    if (!service) {
+      throw new NotFoundException('Service not found');
+    }
+
+    if (service.provider.id !== currentUser.sub) {
+      throw new ForbiddenException('You can only upload images for your own services');
+    }
+
+    if (!files || files.length === 0) {
+      throw new BadRequestException('At least one image is required');
+    }
+
+    const uploaded = files.map((file) => `uploads/services/${file.filename}`);
+    const existing = service.imageUrls ?? [];
+
+    if (existing.length + uploaded.length > 5) {
+      throw new BadRequestException('A service can have at most 5 images');
+    }
+
+    service.imageUrls = [...existing, ...uploaded];
+
+    const saved = await this.serviceRepository.save(service);
+
+    return {
+      message: 'Images uploaded successfully',
+      imageUrls: saved.imageUrls,
+    };
+  }
+
+  async deleteImage(id: number, currentUser: JwtPayload, imageName: string) {
+    await this.assertProviderRole(currentUser);
+
+    const service = await this.serviceRepository.findOne({
+      where: { id },
+      relations: { provider: true },
+    });
+
+    if (!service) {
+      throw new NotFoundException('Service not found');
+    }
+
+    if (service.provider.id !== currentUser.sub) {
+      throw new ForbiddenException('You can only delete images for your own services');
+    }
+
+    const sanitizedFileName = basename(imageName);
+    if (!sanitizedFileName) {
+      throw new BadRequestException('Invalid image name');
+    }
+
+    const existing = service.imageUrls ?? [];
+    const targetPath = `uploads/services/${sanitizedFileName}`;
+
+    if (!existing.includes(targetPath)) {
+      throw new NotFoundException('Image not found in this service gallery');
+    }
+
+    service.imageUrls = existing.filter((path) => path !== targetPath);
+    await this.serviceRepository.save(service);
+
+    const absolutePath = join(process.cwd(), targetPath);
+    try {
+      await unlink(absolutePath);
+    } catch {
+      // If file is already missing on disk, DB state remains correct.
+    }
+
+    return {
+      message: 'Image deleted successfully',
+      imageUrls: service.imageUrls,
+    };
   }
 
   private async assertProviderRole(currentUser: JwtPayload): Promise<void> {
