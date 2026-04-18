@@ -17,6 +17,7 @@ import {
   SubCategory,
   User,
 } from './database/entities';
+import { DocumentsModule } from './documents/documents.module';
 import { RequestsModule } from './requests/requests.module';
 import { ServicesModule } from './services/services.module';
 import { SubCategoriesModule } from './sub-categories/sub-categories.module';
@@ -49,6 +50,7 @@ import { UsersModule } from './users/users.module';
     SubCategoriesModule,
     ServicesModule,
     RequestsModule,
+    DocumentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
