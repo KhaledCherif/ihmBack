@@ -57,6 +57,21 @@ export class User extends BaseEntity {
   @Column({ type: 'datetime', nullable: true })
   emailVerifiedAt!: Date | null;
 
+  @Column({ type: 'text', nullable: true })
+  refreshTokenHash!: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  emailVerificationTokenHash!: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  emailVerificationExpiresAt!: Date | null;
+
+  @Column({ type: 'text', nullable: true })
+  passwordResetTokenHash!: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  passwordResetExpiresAt!: Date | null;
+
   @Column({ type: 'varchar', length: 20, nullable: true })
   providerValidationStatus!: ProviderValidationStatus | null;
 

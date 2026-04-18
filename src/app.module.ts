@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import {
@@ -15,6 +16,7 @@ import {
   SubCategory,
   User,
 } from './database/entities';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import {
       synchronize: true,
       logging: false,
     }),
+    AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
